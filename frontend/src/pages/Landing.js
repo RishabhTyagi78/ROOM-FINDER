@@ -1,150 +1,162 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, MapPin, Search, Home, Shield, MessageCircle, Star, Sparkles, Building2, Users, Wallet } from "lucide-react";
+import { ArrowRight, MapPin, Search, Shield, MessageCircle, Star, Sparkles, CheckCircle2, Building2, Users, TrendingUp, BadgeCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
 
 export default function Landing() {
-  const { user, setRole } = useAuth();
+  const { user } = useAuth();
   const nav = useNavigate();
-  const listPropertyPath = !user ? "/register" : user.role === "khatta" || user.role === "admin" ? "/khatta/add" : null;
-  const handleListProperty = async (e) => {
-    if (user && user.role !== "khatta" && user.role !== "admin") {
-      e.preventDefault();
-      if (window.confirm("You're signed in as MEETHA. Switch to KHATTA (owner) to list a property?")) {
-        await setRole("khatta");
-        toast.success("Switched to KHATTA");
-        nav("/khatta/add");
-      }
-    }
-  };
+  const [featured, setFeatured] = useState([]);
+  useEffect(() => { api.get("/properties", { params: { limit: 6 } }).then(r => setFeatured(r.data)).catch(() => {}); }, []);
+
+  const dashTo = user ? "/dashboard" : "/register";
+
   return (
-    <div className="bg-[#FAFAF9]">
+    <div className="bg-[var(--bg)]">
       <Navbar />
 
-      {/* Marquee */}
-      <div className="bg-zinc-950 text-[#D9F845] border-b-2 border-zinc-950 overflow-hidden">
-        <div className="flex gap-12 py-2 font-mono text-xs uppercase tracking-widest marquee whitespace-nowrap">
-          {Array(8).fill(0).map((_, i) => (
-            <span key={i}>★ NO BROKERS ★ DIRECT FROM OWNERS ★ VERIFIED LISTINGS ★ KHATTA·MEETHA ★ FIND YOUR SPOT ★</span>
-          ))}
-        </div>
-      </div>
-
       {/* HERO */}
-      <section className="border-b-2 border-zinc-950">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-20 grid lg:grid-cols-12 gap-8 items-center">
-          <div className="lg:col-span-7">
-            <span className="badge-brutal bg-[#D9F845]" data-testid="hero-badge">★ BROKER-FREE RENTALS</span>
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl mt-6 leading-[0.9]">
-              SOUR for owners.<br />
-              <span className="bg-[#FF4D00] text-white px-2 inline-block -rotate-1">SWEET</span> for renters.
-            </h1>
-            <p className="mt-6 text-lg max-w-xl">
-              KHATTA-MEETHA cuts the broker out. Property owners list. Tenants discover. Everyone wins. PG, Flats, Apartments — all within walking distance.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/explore" className="btn-brutal btn-meetha" data-testid="hero-cta-explore">
-                Find a Home <ArrowRight className="w-4 h-4" strokeWidth={3} />
-              </Link>
-              <Link to={listPropertyPath || "/register"} onClick={handleListProperty} className="btn-brutal btn-khatta" data-testid="hero-cta-list">
-                List a Property <Home className="w-4 h-4" strokeWidth={3} />
-              </Link>
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-2)] to-[var(--bg)] -z-0" />
+        <div className="max-w-7xl mx-auto px-4 md:px-6 pt-16 md:pt-24 pb-20 relative">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="fade-in">
+              <span className="badge badge-info" data-testid="hero-badge"><BadgeCheck className="w-3 h-3" /> Verified · Broker-free</span>
+              <h1 className="mt-5 text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]">
+                Find your next home,<br className="hidden sm:block" /> <span className="text-[var(--accent)]">directly from owners.</span>
+              </h1>
+              <p className="mt-5 text-base sm:text-lg text-[var(--muted)] max-w-xl leading-relaxed">
+                KHATTA-MEETHA connects property owners with renters — no brokers, no commission. Discover verified PGs, flats, and apartments near you.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link to="/explore" className="btn btn-primary" data-testid="hero-cta-explore">
+                  Browse properties <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link to={dashTo} className="btn btn-outline" data-testid="hero-cta-list">
+                  List your property
+                </Link>
+              </div>
+              <div className="mt-10 flex flex-wrap gap-8">
+                {[["12K+", "Listings"], ["95%", "Verified owners"], ["₹0", "Brokerage"]].map(([v, l]) => (
+                  <div key={l}>
+                    <div className="text-2xl font-semibold">{v}</div>
+                    <div className="text-xs text-[var(--muted)] uppercase tracking-wide">{l}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="mt-10 flex flex-wrap gap-6 font-mono text-xs uppercase">
-              <div><span className="font-display text-2xl block">12K+</span> Active listings</div>
-              <div><span className="font-display text-2xl block">95%</span> Verified owners</div>
-              <div><span className="font-display text-2xl block">0₹</span> Broker fees</div>
-            </div>
-          </div>
-          <div className="lg:col-span-5">
-            <div className="card-brutal p-0 overflow-hidden -rotate-2 shadow-brutal-lg">
-              <img src="https://images.pexels.com/photos/7587828/pexels-photo-7587828.jpeg" alt="hero" className="w-full h-80 lg:h-[460px] object-cover" />
-            </div>
-            <div className="card-brutal bg-[#D9F845] p-4 -mt-12 ml-8 max-w-xs rotate-2 relative" data-testid="hero-floating-card">
-              <div className="font-display text-3xl">₹8.5K</div>
-              <div className="font-mono text-xs uppercase">Avg saving vs broker</div>
+            <div className="relative">
+              <div className="card overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&q=80" alt="" className="w-full h-[420px] object-cover" />
+              </div>
+              <div className="absolute -bottom-5 -left-5 card p-4 max-w-[200px] shadow-lg fade-in" data-testid="hero-floating-card">
+                <div className="flex items-center gap-2 text-xs text-[var(--muted)]"><TrendingUp className="w-3 h-3 text-green-600" /> Avg saving</div>
+                <div className="text-xl font-semibold">₹8,500</div>
+                <div className="text-[10px] text-[var(--muted)]">vs. broker fees</div>
+              </div>
+              <div className="absolute -top-4 -right-4 card p-3 shadow-lg flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center"><CheckCircle2 className="w-4 h-4 text-green-600" /></div>
+                <div>
+                  <div className="text-xs font-medium">Verified owner</div>
+                  <div className="text-[10px] text-[var(--muted)]">100% safe</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SEARCH BAR Bento */}
-      <section className="border-b-2 border-zinc-950 bg-white">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-12">
-          <div className="card-brutal p-6 md:p-8 bg-[#FAFAF9]" data-testid="search-bento">
-            <div className="flex flex-col md:flex-row items-stretch gap-4">
-              <input className="input-brutal flex-1" placeholder="Search by city, locality or college…" data-testid="search-input"
-                onKeyDown={(e) => { if (e.key === "Enter") window.location.href = `/explore?q=${encodeURIComponent(e.target.value)}`; }} />
-              <Link to="/explore" className="btn-brutal btn-ink" data-testid="search-button">
-                <Search className="w-4 h-4" strokeWidth={3} /> Search
-              </Link>
-              <Link to="/map" className="btn-brutal btn-meetha" data-testid="search-map-button">
-                <MapPin className="w-4 h-4" strokeWidth={3} /> Map Search
-              </Link>
+      {/* SEARCH */}
+      <section className="border-b border-[var(--border)]">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 -mt-8 mb-12">
+          <div className="card p-3 md:p-4 shadow-lg" data-testid="search-card">
+            <div className="flex flex-col md:flex-row gap-2">
+              <div className="flex-1 flex items-center gap-2 px-3">
+                <Search className="w-4 h-4 text-[var(--muted)]" />
+                <input className="flex-1 outline-none bg-transparent text-sm py-2.5"
+                  placeholder="Search by city, locality, or college…" data-testid="search-input"
+                  onKeyDown={(e) => { if (e.key === "Enter") nav(`/explore?q=${encodeURIComponent(e.target.value)}`); }} />
+              </div>
+              <Link to="/explore" className="btn btn-primary" data-testid="search-button">Search</Link>
+              <Link to="/map" className="btn btn-outline" data-testid="search-map-button"><MapPin className="w-4 h-4" /> Map</Link>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2 font-mono text-xs uppercase">
-              <span className="opacity-60">Popular:</span>
-              {["Bangalore", "Mumbai", "Delhi", "Pune", "Hyderabad", "Chennai"].map((c) => (
-                <Link key={c} to={`/explore?city=${c}`} className="badge-brutal hover:bg-[#D9F845]" data-testid={`popular-${c}`}>{c}</Link>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs px-1">
+            <span className="text-[var(--muted)]">Popular:</span>
+            {["Bangalore", "Mumbai", "Delhi", "Pune", "Hyderabad", "Chennai"].map((c) => (
+              <Link key={c} to={`/explore?city=${c}`} className="text-[var(--ink)] hover:text-[var(--accent)] transition" data-testid={`popular-${c}`}>{c}</Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURED */}
+      {featured.length > 0 && (
+        <section>
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-16">
+            <div className="flex items-end justify-between mb-8">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Featured properties</h2>
+                <p className="text-[var(--muted)] text-sm mt-1">Handpicked listings ready to move in.</p>
+              </div>
+              <Link to="/explore" className="text-sm text-[var(--accent)] hover:underline">View all →</Link>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featured.slice(0, 6).map((p) => (
+                <div key={p.id} className="fade-in"><PropertyCardThumb p={p} /></div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* WHY US — Bento Grid */}
-      <section className="border-b-2 border-zinc-950">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16">
-          <h2 className="font-display text-3xl sm:text-4xl uppercase">Built for the way India rents.</h2>
-          <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-6 mt-10">
-            <div className="card-brutal p-6 md:col-span-2 lg:col-span-3 bg-[#FF4D00] text-white" data-testid="feature-1">
-              <Shield className="w-8 h-8 mb-4" strokeWidth={3} />
-              <h3 className="font-display text-2xl uppercase">Zero Brokerage</h3>
-              <p className="mt-2 text-white/90">No middlemen. No commission. Talk to owners directly and save thousands.</p>
-            </div>
-            <div className="card-brutal p-6 lg:col-span-3" data-testid="feature-2">
-              <MapPin className="w-8 h-8 mb-4" strokeWidth={3} />
-              <h3 className="font-display text-2xl uppercase">Hyperlocal Search</h3>
-              <p className="mt-2">Find rooms within 500m of your college, office or metro station. Live map. Live radius.</p>
-            </div>
-            <div className="card-brutal p-6 lg:col-span-2 bg-[#D9F845]" data-testid="feature-3">
-              <MessageCircle className="w-8 h-8 mb-4" strokeWidth={3} />
-              <h3 className="font-display text-2xl uppercase">Chat in real-time</h3>
-              <p className="mt-2">DM owners. Schedule visits. Get rent details, all in one place.</p>
-            </div>
-            <div className="card-brutal p-6 lg:col-span-2" data-testid="feature-4">
-              <Sparkles className="w-8 h-8 mb-4" strokeWidth={3} />
-              <h3 className="font-display text-2xl uppercase">Verified Owners</h3>
-              <p className="mt-2">Documents, ID and property — checked by admins. No fraud.</p>
-            </div>
-            <div className="card-brutal p-6 lg:col-span-2 bg-zinc-950 text-white" data-testid="feature-5">
-              <Wallet className="w-8 h-8 mb-4 text-[#D9F845]" strokeWidth={3} />
-              <h3 className="font-display text-2xl uppercase">Rent. Reminders. Records.</h3>
-              <p className="mt-2 text-zinc-300">Owners track rent and tenants get reminders. Nobody chases anyone.</p>
-            </div>
+      {/* WHY */}
+      <section className="bg-[var(--bg-2)] border-y border-[var(--border)]">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-16">
+          <div className="max-w-2xl">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">A modern way to rent.</h2>
+            <p className="text-[var(--muted)] mt-2">Everything you need to find, visit, and move in — without the broker overhead.</p>
           </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section className="border-b-2 border-zinc-950 bg-[#D9F845]">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16">
-          <div className="flex items-end justify-between flex-wrap gap-6">
-            <h2 className="font-display text-3xl sm:text-4xl uppercase">3 steps. Done.</h2>
-            <span className="badge-brutal bg-white">SIMPLE BY DESIGN</span>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6 mt-10">
+          <div className="grid md:grid-cols-3 gap-5 mt-10">
             {[
-              { n: "01", t: "Search nearby", d: "Use the map. Set your radius. Filter what you need.", i: Search },
-              { n: "02", t: "Visit & verify", d: "Book a visit. Owner approves. You go check the place.", i: Home },
-              { n: "03", t: "Move in", d: "Pay rent online. Sign digitally. Move in with confidence.", i: Star },
+              { I: Shield, t: "Zero brokerage", d: "Talk to owners directly. Save thousands on broker fees." },
+              { I: MapPin, t: "Hyperlocal search", d: "Find rooms within 500m of your college, office, or metro." },
+              { I: MessageCircle, t: "Instant chat", d: "DM owners, schedule visits, get details — all in one place." },
+              { I: BadgeCheck, t: "Verified listings", d: "Every owner and document is screened for safety." },
+              { I: Building2, t: "Manage everything", d: "Track rent, appointments, tenants in your dashboard." },
+              { I: Sparkles, t: "Premium experience", d: "Clean design, fast search, mobile-first." },
+            ].map((f, i) => (
+              <div key={i} className="card p-5" data-testid={`feature-${i + 1}`}>
+                <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] text-[var(--accent)] flex items-center justify-center">
+                  <f.I className="w-4 h-4" />
+                </div>
+                <div className="font-semibold mt-3">{f.t}</div>
+                <div className="text-sm text-[var(--muted)] mt-1">{f.d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HOW */}
+      <section>
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-16">
+          <div className="text-center max-w-xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Three simple steps.</h2>
+            <p className="text-[var(--muted)] mt-2">From browsing to move-in, we make it effortless.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 mt-12 relative">
+            {[
+              { n: "01", t: "Search nearby", d: "Use the map. Set your radius. Filter what you need." },
+              { n: "02", t: "Visit & verify", d: "Book a visit. Owner approves. You check the place." },
+              { n: "03", t: "Move in", d: "Sign digitally. Pay rent online. Move in with confidence." },
             ].map((s, i) => (
-              <div key={i} className="card-brutal p-6 bg-white" data-testid={`step-${i + 1}`}>
-                <div className="font-mono text-xs uppercase">Step {s.n}</div>
-                <s.i className="w-10 h-10 my-4" strokeWidth={3} />
-                <h3 className="font-display text-2xl uppercase">{s.t}</h3>
-                <p className="mt-2">{s.d}</p>
+              <div key={i} className="text-center" data-testid={`step-${i + 1}`}>
+                <div className="inline-flex w-12 h-12 rounded-full bg-[var(--ink)] text-white items-center justify-center font-semibold">{s.n}</div>
+                <div className="font-semibold mt-4 text-lg">{s.t}</div>
+                <p className="text-sm text-[var(--muted)] mt-1">{s.d}</p>
               </div>
             ))}
           </div>
@@ -152,38 +164,34 @@ export default function Landing() {
       </section>
 
       {/* TESTIMONIAL */}
-      <section className="border-b-2 border-zinc-950">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 grid lg:grid-cols-2 gap-8 items-center">
-          <div className="card-brutal p-0 overflow-hidden rotate-1">
-            <img src="https://images.pexels.com/photos/4609051/pexels-photo-4609051.jpeg" alt="family" className="w-full h-80 object-cover" />
-          </div>
-          <div>
-            <span className="badge-brutal bg-[#FF4D00] text-white">REAL STORIES</span>
-            <h2 className="font-display text-3xl sm:text-4xl uppercase mt-4">
-              "Found a 2BHK in Indiranagar in 2 days. Zero broker calls."
-            </h2>
-            <p className="mt-4 font-mono text-xs uppercase">— Aarav & Priya, moved Jan 2026</p>
-            <div className="mt-6 flex gap-3 flex-wrap">
-              {[1, 2, 3, 4, 5].map((i) => (<Star key={i} className="w-6 h-6 fill-[#FF4D00]" strokeWidth={3} />))}
+      <section className="bg-[var(--bg-2)] border-y border-[var(--border)]">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 py-16 text-center">
+          <div className="flex justify-center gap-1 mb-4">{[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 star-fill" />)}</div>
+          <p className="text-xl sm:text-2xl font-medium leading-relaxed">"Found a 2BHK in Indiranagar in just 2 days. Zero broker calls, talked directly to the owner. Smoothest rental experience I've had."</p>
+          <div className="mt-6 flex items-center gap-3 justify-center">
+            <div className="w-10 h-10 rounded-full bg-[var(--accent)] text-white flex items-center justify-center text-sm font-semibold">A</div>
+            <div className="text-left">
+              <div className="font-medium text-sm">Aarav & Priya</div>
+              <div className="text-xs text-[var(--muted)]">Moved in Jan 2026 · Bengaluru</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="border-b-2 border-zinc-950 bg-white">
-        <div className="max-w-4xl mx-auto px-4 md:px-8 py-16">
-          <h2 className="font-display text-3xl sm:text-4xl uppercase">FAQ</h2>
-          <div className="mt-8 space-y-4">
+      <section>
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-16">
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-center">Frequently asked</h2>
+          <div className="mt-8 space-y-3">
             {[
-              ["Is KHATTA-MEETHA really broker-free?", "Yes. You chat with owners directly. No middlemen, no commissions."],
-              ["How is location radius search useful?", "Find PGs/flats within 500m to 5km of your college, office or metro station. Live map view included."],
-              ["Can owners verify my documents?", "Yes — you upload Aadhaar/PAN/College ID and owners (or admins) verify before approving."],
-              ["What does KHATTA-MEETHA mean?", "KHATTA = property owners (the sour, strict side). MEETHA = tenants (the sweet, comfort-seeking side). Both meet here."],
+              ["Is KHATTA-MEETHA really broker-free?", "Yes. You chat with owners directly. No middlemen, no commission."],
+              ["How does location radius search work?", "Find PGs/flats within 500m to 25km of your college, office, or metro station. Live map view included."],
+              ["Can I act as both owner and tenant?", "Yes. Every account supports dual-roles — list your property and rent another, all from one login."],
+              ["What does KHATTA-MEETHA mean?", "A play on the Hindi word for 'sweet & sour' — symbolising the meeting point of property owners (KHATTA) and tenants (MEETHA)."],
             ].map(([q, a], i) => (
-              <details key={i} className="card-brutal p-5" data-testid={`faq-${i}`}>
-                <summary className="font-display text-xl cursor-pointer uppercase">{q}</summary>
-                <p className="mt-3 text-zinc-700">{a}</p>
+              <details key={i} className="card p-5 group" data-testid={`faq-${i}`}>
+                <summary className="font-medium cursor-pointer list-none flex items-center justify-between">{q} <span className="text-[var(--muted)] group-open:rotate-180 transition">▾</span></summary>
+                <p className="text-sm text-[var(--muted)] mt-3 leading-relaxed">{a}</p>
               </details>
             ))}
           </div>
@@ -191,29 +199,50 @@ export default function Landing() {
       </section>
 
       {/* CTA */}
-      <section className="bg-zinc-950 text-white border-b-2 border-zinc-950">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 grid md:grid-cols-2 gap-8 items-center">
+      <section className="bg-[var(--ink)] text-white">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-16 grid md:grid-cols-2 gap-8 items-center">
           <div>
-            <h2 className="font-display text-4xl sm:text-5xl uppercase leading-none">Ready to skip the broker?</h2>
-            <p className="mt-4 text-zinc-300">Join 50,000+ owners and tenants meeting directly.</p>
+            <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">Ready to skip the broker?</h2>
+            <p className="text-slate-300 mt-3">Join 50,000+ owners and tenants meeting directly.</p>
           </div>
-          <div className="flex flex-wrap gap-4 md:justify-end">
-            <Link to={user ? (user.role === "khatta" ? "/khatta" : user.role === "admin" ? "/admin" : "/meetha") : "/register"} className="btn-brutal btn-meetha" data-testid="cta-register">{user ? "Go to Dashboard" : "Sign up free"} <ArrowRight className="w-4 h-4" strokeWidth={3} /></Link>
-            <Link to="/explore" className="btn-brutal btn-khatta" data-testid="cta-browse">Browse as guest</Link>
+          <div className="flex flex-wrap gap-3 md:justify-end">
+            <Link to={dashTo} className="btn btn-accent" data-testid="cta-register">{user ? "Go to dashboard" : "Get started free"} <ArrowRight className="w-4 h-4" /></Link>
+            <Link to="/explore" className="btn btn-outline !bg-transparent !text-white !border-white/30" data-testid="cta-browse">Browse listings</Link>
           </div>
         </div>
       </section>
 
-      <footer className="bg-[#FAFAF9]">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-10 flex flex-wrap items-center justify-between gap-4 font-mono text-xs uppercase">
-          <div>© 2026 KHATTA·MEETHA · Made with vibes in Bharat</div>
-          <div className="flex gap-4">
-            <a href="#" data-testid="footer-link-privacy">Privacy</a>
-            <a href="#" data-testid="footer-link-terms">Terms</a>
-            <a href="#" data-testid="footer-link-support">Support</a>
+      <footer className="border-t border-[var(--border)]">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-10 flex flex-wrap items-center justify-between gap-4 text-sm text-[var(--muted)]">
+          <div>© 2026 KHATTA·MEETHA · Built in Bharat 🇮🇳</div>
+          <div className="flex gap-5">
+            <a href="#" data-testid="footer-link-privacy" className="hover:text-[var(--ink)]">Privacy</a>
+            <a href="#" data-testid="footer-link-terms" className="hover:text-[var(--ink)]">Terms</a>
+            <a href="#" data-testid="footer-link-support" className="hover:text-[var(--ink)]">Support</a>
           </div>
         </div>
       </footer>
     </div>
+  );
+}
+
+function PropertyCardThumb({ p }) {
+  const img = p.images?.[0] ? (p.images[0].startsWith("http") ? p.images[0] : `${process.env.REACT_APP_BACKEND_URL}${p.images[0]}`)
+    : "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80";
+  return (
+    <Link to={`/property/${p.id}`} className="card card-hover overflow-hidden block">
+      <div className="aspect-[4/3] overflow-hidden">
+        <img src={img} alt={p.title} className="w-full h-full object-cover" />
+      </div>
+      <div className="p-4">
+        <div className="flex items-center gap-2 justify-between">
+          <span className="badge badge-info">{p.property_type}</span>
+          {p.rating > 0 && <span className="text-xs flex items-center gap-1"><Star className="w-3 h-3 star-fill" />{p.rating}</span>}
+        </div>
+        <div className="font-medium mt-2 line-clamp-1">{p.title}</div>
+        <div className="text-xs text-[var(--muted)]"><MapPin className="w-3 h-3 inline" /> {p.city}</div>
+        <div className="mt-2 font-semibold">₹{p.rent.toLocaleString("en-IN")} <span className="text-xs text-[var(--muted)] font-normal">/ mo</span></div>
+      </div>
+    </Link>
   );
 }

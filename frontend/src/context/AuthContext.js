@@ -8,53 +8,42 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    try {
-      const { data } = await api.get("/auth/me");
-      setUser(data);
-    } catch {
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
+    try { const { data } = await api.get("/auth/me"); setUser(data); }
+    catch { setUser(null); }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
-    // Skip /me if returning from OAuth callback (AuthCallback handles it)
-    if (window.location.hash?.includes("session_id=")) {
-      setLoading(false);
-      return;
-    }
+    if (window.location.hash?.includes("session_id=")) { setLoading(false); return; }
+    if (!localStorage.getItem("km_token")) { setLoading(false); return; }
     refresh();
   }, [refresh]);
 
   const login = async (email, password) => {
     const { data } = await api.post("/auth/login", { email, password });
-    if (data.token) localStorage.setItem("km_token", data.token);
+    localStorage.setItem("km_token", data.token);
     setUser(data.user);
     return data.user;
   };
-
   const register = async (payload) => {
     const { data } = await api.post("/auth/register", payload);
-    if (data.token) localStorage.setItem("km_token", data.token);
+    localStorage.setItem("km_token", data.token);
     setUser(data.user);
     return data.user;
   };
-
   const logout = async () => {
     try { await api.post("/auth/logout"); } catch {}
     localStorage.removeItem("km_token");
     setUser(null);
   };
-
-  const setRole = async (role) => {
+  const setActiveRole = async (role) => {
     const { data } = await api.post("/auth/set-role", { role });
     setUser(data);
     return data;
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh, setUser, setRole }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refresh, setUser, setActiveRole }}>
       {children}
     </AuthContext.Provider>
   );

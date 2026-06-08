@@ -16,26 +16,23 @@ export default function AuthCallback() {
     const hash = location.hash || window.location.hash;
     const params = new URLSearchParams(hash.replace("#", ""));
     const session_id = params.get("session_id");
-    if (!session_id) {
-      nav("/login");
-      return;
-    }
+    if (!session_id) { nav("/login"); return; }
     (async () => {
       try {
         const { data } = await api.post("/auth/google/session", { session_id });
-        if (data.token) localStorage.setItem("km_token", data.token);
+        localStorage.setItem("km_token", data.token);
         setUser(data.user);
-        const dest = data.user.role === "khatta" ? "/khatta" : data.user.role === "admin" ? "/admin" : "/meetha";
-        nav(dest, { replace: true });
-      } catch (e) {
-        nav("/login", { replace: true });
-      }
+        nav(data.user.roles?.includes("admin") ? "/admin" : "/dashboard", { replace: true });
+      } catch { nav("/login", { replace: true }); }
     })();
   }, []); // eslint-disable-line
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="card-brutal p-8 font-display text-2xl">Signing you in…</div>
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-2)]">
+      <div className="card p-7 text-center">
+        <div className="font-semibold">Signing you in…</div>
+        <div className="text-sm text-[var(--muted)] mt-1">One moment</div>
+      </div>
     </div>
   );
 }

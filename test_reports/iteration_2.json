@@ -1,0 +1,47 @@
+{
+  "summary": "Iteration 2 testing of KHATTA-MEETHA dual-role refresh. Backend: 13/13 new pytest cases pass (dual-roles on register/login/set-role, owner-cannot-book-own, notifications on book/approve/message, unread-count + mark-read + read-all, typing indicator round-trip, conversations.unread_count, geo reverse/search, property views tracking). Frontend: landing renders in new clean Inter/white/indigo design; login as owner@test.com lands on /dashboard; role switcher (Tenant view / Owner view) visible with data-testid=role-switcher; notification bell shows red count badge (3); /notifications page renders all items with correct types (appointment_request, message); /dashboard/list-property loads Leaflet map + searchable address; explore->property detail renders with Book a visit form for non-owned property. Theme toggle button present in navbar.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/geo/reverse & /api/geo/search", "issue": "Bare try/except swallows ALL exceptions and returns empty dict/list with HTTP 200. Caller cannot distinguish 'no results' from 'upstream Nominatim down'. Consider returning 502 or logging."},
+      {"endpoint": "/api/typing", "issue": "TTL index created with expireAfterSeconds=10, but get_typing uses 6s cutoff. Slight inconsistency (works fine, just noted)."},
+      {"endpoint": "/api/properties/{pid}", "issue": "View tracking swallowed in bare except - if get_current_user throws non-auth errors (e.g. DB hiccup) we silently lose data. Use except HTTPException: pass."},
+      {"endpoint": "/api/auth/set-role", "issue": "Always merges role into roles array, but never lets user REMOVE a role. OK for dual-role MVP, just noted."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "PropertyDetail Book-a-Visit", "issues": ["STILL uses browser-native date input (mm/dd/yyyy) and time input — same as iteration 1. Should be replaced with shadcn DatePicker/calendar for design consistency."]},
+      {"screen": "Dashboard owner view stat cards", "issues": ["6 stat cards now (Properties, Available, Occupied, Pending visits, Active chats, Rent collected) — cleaner than iter1, but 'Rent collected ₹0' icon background tile is dark/black while other tiles are pastel — visual inconsistency."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/iteration2_test.py",
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/iter2_results.xml"
+  ],
+  "action_items": [
+    "Replace native datetime/time inputs in PropertyDetail booking form with shadcn DatePicker (carried over from iter1).",
+    "Normalize Rent collected stat card icon background to match other pastel tiles on the Owner Dashboard.",
+    "Tighten bare except blocks in /api/geo/* and /api/properties/{pid} view tracking — should catch specific exceptions and log."
+  ],
+  "critical_code_review_comments": [
+    "server.py is now ~760 lines and mixes auth, properties, chat, notifications, geo, uploads, admin — should be split into routers per domain (auth, properties, chat, notifications, geo, admin).",
+    "create_notification is fire-and-forget DB insert that runs synchronously inside the request — fine for now but in high-traffic should move to a task queue.",
+    "Nominatim is called inline via blocking `requests` inside async endpoints (/api/geo/*) — will block event loop; switch to httpx.AsyncClient or run_in_threadpool.",
+    "get_current_user is called inside GET /properties/{pid} in a try/except (anonymous-allowed pattern). The bare `except: pass` will hide DB and JWT validation errors — narrow to HTTPException.",
+    "Owner-self-book is blocked server-side correctly (400), but messages endpoint does NOT block sending a message to yourself; frontend hides UI per the spec, but defense-in-depth check missing.",
+    "Notifications schema has no pagination cursor / no aging — list_notifs hard-caps at limit=50 but never trims old read notifications; will grow forever per user.",
+    "make_user_public exposes `roles` array which may include 'admin' — confirm this isn't leaked to other users via /api/conversations.other_user or /api/properties.owner (currently it would be)."
+  ],
+  "updated_files": ["/app/backend/tests/iteration2_test.py"],
+  "success_rate": {"backend": "100% (13/13 new + 17/17 existing)", "frontend": "100% on tested critical flows"},
+  "test_credentials": "admin@khattameetha.com/admin123, owner@test.com/owner123, tenant@test.com/tenant123 — all working with dual roles ['khatta','meetha'] (admin has all three).",
+  "seed_data_creation": "Added TEST_dual_*, TEST_setrole_*, TEST_iter2_* users/properties + multiple notifications for owner@/tenant@. Tenant now owns 1 test property (TEST_setrole_*) because set-role test exercised khatta endpoint as tenant; expected behavior under dual-role design.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Two backend pytest files now: /app/backend/tests/backend_test.py (iter1 baseline) and /app/backend/tests/iteration2_test.py (dual-role, notifs, typing, geo, owner-block, views). Run both with: pytest /app/backend/tests/ -v. Frontend testids confirmed: role-switcher, switch-tenant, switch-owner, notif-bell, notif-count, login-email, login-password, login-submit. Theme toggle is the moon/sun icon button in navbar (next to bell). Property detail booking still uses native HTML datetime/time inputs — flag again if not fixed.",
+  "rca of the issue": "N/A — no blocking issues. All review_request items verified working both via API tests and UI screenshots."
+}

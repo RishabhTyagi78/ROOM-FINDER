@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import "@/App.css";
 
 import Landing from "@/pages/Landing";
@@ -12,19 +13,16 @@ import AuthCallback from "@/pages/AuthCallback";
 import Explore from "@/pages/Explore";
 import MapSearch from "@/pages/MapSearch";
 import PropertyDetail from "@/pages/PropertyDetail";
-import KhattaDashboard from "@/pages/KhattaDashboard";
-import MeethaDashboard from "@/pages/MeethaDashboard";
 import PropertyForm from "@/pages/PropertyForm";
+import Dashboard from "@/pages/Dashboard";
 import Chat from "@/pages/Chat";
 import AdminPanel from "@/pages/AdminPanel";
 import Compare from "@/pages/Compare";
+import Notifications from "@/pages/Notifications";
 
 function Router() {
   const location = useLocation();
-  // Intercept OAuth callback hash
-  if (location.hash?.includes("session_id=")) {
-    return <AuthCallback />;
-  }
+  if (location.hash?.includes("session_id=")) return <AuthCallback />;
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
@@ -37,11 +35,11 @@ function Router() {
       <Route path="/map" element={<MapSearch />} />
       <Route path="/compare" element={<Compare />} />
       <Route path="/property/:id" element={<PropertyDetail />} />
-      <Route path="/khatta" element={<KhattaDashboard />} />
-      <Route path="/khatta/add" element={<PropertyForm />} />
-      <Route path="/khatta/edit/:id" element={<PropertyForm />} />
-      <Route path="/meetha" element={<MeethaDashboard />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/dashboard/list-property" element={<PropertyForm />} />
+      <Route path="/chat" element={<Chat />} />
       <Route path="/chat/:otherId" element={<Chat />} />
+      <Route path="/notifications" element={<Notifications />} />
       <Route path="/admin" element={<AdminPanel />} />
     </Routes>
   );
@@ -50,12 +48,14 @@ function Router() {
 export default function App() {
   return (
     <div className="App">
-      <BrowserRouter>
-        <AuthProvider>
-          <Router />
-          <Toaster position="top-right" toastOptions={{ style: { border: "2px solid #09090B", borderRadius: 0, boxShadow: "4px 4px 0 #09090B", fontWeight: 600 } }} />
-        </AuthProvider>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Router />
+            <Toaster position="top-right" toastOptions={{ style: { fontSize: 13 } }} />
+          </AuthProvider>
+        </BrowserRouter>
+      </ThemeProvider>
     </div>
   );
 }

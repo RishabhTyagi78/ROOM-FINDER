@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import api from "@/lib/api";
-import { Check, X, Plus } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 export default function Compare() {
   const [sp, setSp] = useSearchParams();
@@ -18,41 +18,42 @@ export default function Compare() {
     })();
   }, [sp]); // eslint-disable-line
 
-  const addProp = (id) => {
-    const next = [...ids, id]; setSp({ ids: next.join(",") });
-  };
+  const addProp = (id) => { const next = [...ids, id]; setSp({ ids: next.join(",") }); };
   const remove = (id) => setSp({ ids: ids.filter((i) => i !== id).join(",") });
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9]">
+    <div className="min-h-screen bg-[var(--bg-2)]">
       <Navbar />
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
-        <h1 className="font-display text-4xl uppercase">Compare</h1>
-        <p className="font-mono text-xs uppercase opacity-70 mt-1">Side by side. No nonsense.</p>
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Compare properties</h1>
+        <p className="text-sm text-[var(--muted)] mt-0.5">Side-by-side comparison — pick up to 4.</p>
 
         {props.length === 0 ? (
-          <div className="card-brutal p-6 mt-6">
-            <div>Pick properties to compare:</div>
+          <div className="card p-6 mt-6">
+            <div className="text-sm font-medium">Select properties to compare</div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
               {all.slice(0, 9).map((p) => (
-                <button key={p.id} onClick={() => addProp(p.id)} className="card-brutal p-3 text-left" data-testid={`pick-${p.id}`}>
-                  <div className="font-bold">{p.title}</div>
-                  <div className="text-xs">{p.city} · ₹{p.rent}</div>
+                <button key={p.id} onClick={() => addProp(p.id)} className="card card-hover p-4 text-left" data-testid={`pick-${p.id}`}>
+                  <div className="font-medium text-sm line-clamp-1">{p.title}</div>
+                  <div className="text-xs text-[var(--muted)] mt-1">{p.city} · ₹{p.rent.toLocaleString("en-IN")}</div>
                 </button>
               ))}
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto mt-6">
-            <table className="w-full card-brutal text-sm">
-              <thead>
-                <tr className="bg-zinc-950 text-white">
-                  <th className="p-3 text-left">Feature</th>
+          <div className="card mt-6 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-[var(--bg-2)] border-b border-[var(--border)]">
+                <tr>
+                  <th className="p-3 text-left font-medium text-[var(--muted)]">Feature</th>
                   {props.map((p) => (
                     <th key={p.id} className="p-3 text-left min-w-[200px]">
-                      <div className="flex items-center gap-2">
-                        <Link to={`/property/${p.id}`} className="hover:underline">{p.title}</Link>
-                        <button onClick={() => remove(p.id)} className="badge-brutal bg-[#FF4D00] text-white"><X className="w-3 h-3" strokeWidth={3} /></button>
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1">
+                          <Link to={`/property/${p.id}`} className="hover:text-[var(--accent)] font-medium">{p.title}</Link>
+                          <div className="text-xs text-[var(--muted)] mt-0.5 font-normal">{p.city}</div>
+                        </div>
+                        <button onClick={() => remove(p.id)} className="text-[var(--muted)] hover:text-red-600"><X className="w-4 h-4" /></button>
                       </div>
                     </th>
                   ))}
@@ -60,26 +61,26 @@ export default function Compare() {
               </thead>
               <tbody>
                 {[
-                  ["City", (p) => p.city], ["Type", (p) => p.property_type],
-                  ["Rent", (p) => `₹${p.rent.toLocaleString("en-IN")}`],
-                  ["Deposit", (p) => `₹${p.deposit.toLocaleString("en-IN")}`],
-                  ["Furnished", (p) => p.furnished],
-                  ["AC", (p) => p.ac ? <Check className="w-4 h-4 text-green-700" /> : <X className="w-4 h-4 text-red-700" />],
-                  ["WiFi", (p) => p.wifi ? <Check className="w-4 h-4 text-green-700" /> : <X className="w-4 h-4 text-red-700" />],
-                  ["Parking", (p) => p.parking ? <Check className="w-4 h-4 text-green-700" /> : <X className="w-4 h-4 text-red-700" />],
+                  ["Property type", (p) => p.property_type],
+                  ["Monthly rent", (p) => `₹${p.rent.toLocaleString("en-IN")}`],
+                  ["Security deposit", (p) => `₹${p.deposit.toLocaleString("en-IN")}`],
+                  ["Furnishing", (p) => p.furnished],
+                  ["AC", (p) => p.ac ? <Check className="w-4 h-4 text-green-600" /> : <X className="w-4 h-4 text-[var(--muted)]" />],
+                  ["Wi-Fi", (p) => p.wifi ? <Check className="w-4 h-4 text-green-600" /> : <X className="w-4 h-4 text-[var(--muted)]" />],
+                  ["Parking", (p) => p.parking ? <Check className="w-4 h-4 text-green-600" /> : <X className="w-4 h-4 text-[var(--muted)]" />],
                   ["Rating", (p) => `${p.rating || 0} (${p.review_count || 0})`],
                 ].map(([label, fn]) => (
-                  <tr key={label} className="border-t border-dashed border-zinc-300">
-                    <td className="p-3 font-bold">{label}</td>
+                  <tr key={label} className="border-b border-[var(--border)] last:border-b-0">
+                    <td className="p-3 font-medium text-[var(--muted)]">{label}</td>
                     {props.map((p) => <td key={p.id} className="p-3">{fn(p)}</td>)}
                   </tr>
                 ))}
               </tbody>
             </table>
             {props.length < 4 && (
-              <div className="mt-4">
-                <select onChange={(e) => addProp(e.target.value)} className="input-brutal" data-testid="add-compare">
-                  <option>+ Add another to compare</option>
+              <div className="p-3 border-t border-[var(--border)]">
+                <select onChange={(e) => addProp(e.target.value)} className="field !w-auto" data-testid="add-compare">
+                  <option>+ Add another property</option>
                   {all.filter((p) => !ids.includes(p.id)).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>
               </div>
