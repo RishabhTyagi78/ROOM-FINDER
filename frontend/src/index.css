@@ -72,7 +72,7 @@ html, body, #root {
 }
 .input-brutal:focus { box-shadow: 4px 4px 0 #FF4D00; }
 
-.card-brutal { background: white; border: 2px solid #09090B; box-shadow: 4px 4px 0 #09090B; }
+.card-brutal { border: 2px solid #09090B; box-shadow: 4px 4px 0 #09090B; background: white; }
 
 .badge-brutal {
   display: inline-block; padding: 0.15rem 0.55rem; border: 2px solid #09090B;

@@ -4,7 +4,7 @@ import { Menu, X, MapPin, LogOut, User, LayoutDashboard, Heart, MessageCircle, S
 import { useState } from "react";
 
 export default function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, setRole } = useAuth();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -41,9 +41,20 @@ export default function Navbar() {
             </>
           ) : (
             <div className="flex items-center gap-2">
+              {user.role === "khatta" && (
+                <Link to="/khatta/add" className="btn-brutal btn-meetha" data-testid="nav-add-property">+ List Property</Link>
+              )}
+              {user.role === "meetha" && (
+                <Link to="/khatta/add" onClick={async (e) => {
+                  e.preventDefault();
+                  if (window.confirm("Switch to KHATTA (owner) account to list a property?")) {
+                    await setRole("khatta"); nav("/khatta/add");
+                  }
+                }} className="btn-brutal btn-meetha" data-testid="nav-add-property">+ List Property</Link>
+              )}
               <span className="badge-brutal" data-testid="nav-user-role">{user.role}</span>
-              <span className="font-bold text-sm" data-testid="nav-user-name">{user.name}</span>
-              <button onClick={() => { logout(); nav("/"); }} className="btn-brutal" data-testid="nav-logout">
+              <span className="font-bold text-sm hidden lg:inline" data-testid="nav-user-name">{user.name}</span>
+              <button onClick={() => { logout(); nav("/"); }} className="btn-brutal" data-testid="nav-logout" title="Logout">
                 <LogOut className="w-4 h-4" strokeWidth={3} />
               </button>
             </div>

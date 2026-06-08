@@ -49,9 +49,9 @@ export default function MeethaDashboard() {
   };
 
   const cards = [
-    { l: "Saved Properties", v: stats.saved_properties, c: "bg-[#D9F845]" },
-    { l: "Upcoming Visits", v: stats.upcoming_visits, c: "bg-white" },
-    { l: "Unread Messages", v: stats.unread_messages, c: "bg-[#FF4D00] text-white" },
+    { l: "Saved Properties", v: stats.saved_properties, c: "!bg-[#D9F845]" },
+    { l: "Upcoming Visits", v: stats.upcoming_visits, c: "!bg-white" },
+    { l: "Unread Messages", v: stats.unread_messages, c: "!bg-[#FF4D00] text-white" },
   ];
 
   return (

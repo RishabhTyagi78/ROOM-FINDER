@@ -47,11 +47,11 @@ export default function KhattaDashboard() {
   };
 
   const cards = [
-    { l: "Properties", v: stats.total_properties, c: "bg-white", I: Building2 },
-    { l: "Available", v: stats.available, c: "bg-[#D9F845]", I: Home },
-    { l: "Occupied", v: stats.occupied, c: "bg-[#FF4D00] text-white", I: Users },
-    { l: "Pending Visits", v: stats.pending_appointments, c: "bg-white", I: CalIcon },
-    { l: "Rent Collected", v: `₹${(stats.rent_collected || 0).toLocaleString("en-IN")}`, c: "bg-zinc-950 text-white", I: Wallet },
+    { l: "Properties", v: stats.total_properties, c: "!bg-white", I: Building2 },
+    { l: "Available", v: stats.available, c: "!bg-[#D9F845]", I: Home },
+    { l: "Occupied", v: stats.occupied, c: "!bg-[#FF4D00] text-white", I: Users },
+    { l: "Pending Visits", v: stats.pending_appointments, c: "!bg-white", I: CalIcon },
+    { l: "Rent Collected", v: `₹${(stats.rent_collected || 0).toLocaleString("en-IN")}`, c: "!bg-zinc-950 text-white", I: Wallet },
   ];
 
   return (

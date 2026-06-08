@@ -1,8 +1,23 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, MapPin, Search, Home, Shield, MessageCircle, Star, Sparkles, Building2, Users, Wallet } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 export default function Landing() {
+  const { user, setRole } = useAuth();
+  const nav = useNavigate();
+  const listPropertyPath = !user ? "/register" : user.role === "khatta" || user.role === "admin" ? "/khatta/add" : null;
+  const handleListProperty = async (e) => {
+    if (user && user.role !== "khatta" && user.role !== "admin") {
+      e.preventDefault();
+      if (window.confirm("You're signed in as MEETHA. Switch to KHATTA (owner) to list a property?")) {
+        await setRole("khatta");
+        toast.success("Switched to KHATTA");
+        nav("/khatta/add");
+      }
+    }
+  };
   return (
     <div className="bg-[#FAFAF9]">
       <Navbar />
@@ -32,7 +47,7 @@ export default function Landing() {
               <Link to="/explore" className="btn-brutal btn-meetha" data-testid="hero-cta-explore">
                 Find a Home <ArrowRight className="w-4 h-4" strokeWidth={3} />
               </Link>
-              <Link to="/register" className="btn-brutal btn-khatta" data-testid="hero-cta-list">
+              <Link to={listPropertyPath || "/register"} onClick={handleListProperty} className="btn-brutal btn-khatta" data-testid="hero-cta-list">
                 List a Property <Home className="w-4 h-4" strokeWidth={3} />
               </Link>
             </div>
@@ -183,7 +198,7 @@ export default function Landing() {
             <p className="mt-4 text-zinc-300">Join 50,000+ owners and tenants meeting directly.</p>
           </div>
           <div className="flex flex-wrap gap-4 md:justify-end">
-            <Link to="/register" className="btn-brutal btn-meetha" data-testid="cta-register">Sign up free <ArrowRight className="w-4 h-4" strokeWidth={3} /></Link>
+            <Link to={user ? (user.role === "khatta" ? "/khatta" : user.role === "admin" ? "/admin" : "/meetha") : "/register"} className="btn-brutal btn-meetha" data-testid="cta-register">{user ? "Go to Dashboard" : "Sign up free"} <ArrowRight className="w-4 h-4" strokeWidth={3} /></Link>
             <Link to="/explore" className="btn-brutal btn-khatta" data-testid="cta-browse">Browse as guest</Link>
           </div>
         </div>
