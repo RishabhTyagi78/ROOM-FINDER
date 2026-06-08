@@ -68,12 +68,12 @@ export default function KhattaDashboard() {
           </Link>
         </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mt-6">
           {cards.map((c, i) => (
             <div key={i} className={`card-brutal p-4 ${c.c}`} data-testid={`stat-${i}`}>
-              <c.I className="w-6 h-6 mb-2" strokeWidth={3} />
-              <div className="font-mono text-xs uppercase opacity-80">{c.l}</div>
-              <div className="font-display text-3xl mt-1">{c.v ?? 0}</div>
+              <c.I className="w-5 h-5 md:w-6 md:h-6 mb-2" strokeWidth={3} />
+              <div className="font-mono text-[10px] md:text-xs uppercase opacity-80">{c.l}</div>
+              <div className="font-display text-2xl md:text-3xl mt-1">{c.v ?? 0}</div>
             </div>
           ))}
         </div>

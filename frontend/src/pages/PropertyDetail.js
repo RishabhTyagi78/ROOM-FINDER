@@ -195,7 +195,10 @@ export default function PropertyDetail() {
                 </div>
                 <div className="border-t-2 border-dashed border-zinc-300 pt-3">
                   <div className="font-mono text-xs uppercase">Book a Visit</div>
-                  <input type="datetime-local" className="input-brutal mt-1" value={date} onChange={(e) => setDate(e.target.value)} data-testid="visit-date" />
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <input type="date" className="input-brutal" value={date.split("T")[0] || ""} onChange={(e) => setDate(`${e.target.value}T${(date.split("T")[1]) || "10:00"}`)} data-testid="visit-date" />
+                    <input type="time" className="input-brutal" value={date.split("T")[1] || "10:00"} onChange={(e) => setDate(`${(date.split("T")[0]) || new Date().toISOString().slice(0,10)}T${e.target.value}`)} data-testid="visit-time" />
+                  </div>
                   <textarea className="input-brutal mt-2" rows={2} placeholder="Optional message" value={msg} onChange={(e) => setMsg(e.target.value)} data-testid="visit-message" />
                   <button onClick={book} className="btn-brutal btn-meetha w-full mt-2" data-testid="visit-submit">
                     <Calendar className="w-4 h-4" strokeWidth={3} /> Request Visit
