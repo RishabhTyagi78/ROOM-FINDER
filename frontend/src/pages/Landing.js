@@ -51,16 +51,20 @@ export default function Landing() {
               <div className="card overflow-hidden">
                 <img src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&q=80" alt="" className="w-full h-[420px] object-cover" />
               </div>
-              <div className="absolute -bottom-5 -left-5 card p-4 max-w-[200px] shadow-lg fade-in" data-testid="hero-floating-card">
-                <div className="flex items-center gap-2 text-xs text-[var(--muted)]"><TrendingUp className="w-3 h-3 text-green-600" /> Avg saving</div>
-                <div className="text-xl font-semibold">₹8,500</div>
-                <div className="text-[10px] text-[var(--muted)]">vs. broker fees</div>
-              </div>
-              <div className="absolute -top-4 -right-4 card p-3 shadow-lg flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center"><CheckCircle2 className="w-4 h-4 text-green-600" /></div>
-                <div>
-                  <div className="text-xs font-medium">Verified owner</div>
-                  <div className="text-[10px] text-[var(--muted)]">100% safe</div>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <div className="card p-4 flex items-center gap-3 shadow-md fade-in" data-testid="hero-floating-card">
+                  <div className="w-9 h-9 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center"><TrendingUp className="w-4 h-4 text-green-700 dark:text-green-300" /></div>
+                  <div>
+                    <div className="text-xs text-[var(--muted)]">Avg saving</div>
+                    <div className="text-lg font-semibold">₹8,500 <span className="text-xs text-[var(--muted)] font-normal">vs. broker</span></div>
+                  </div>
+                </div>
+                <div className="card p-4 flex items-center gap-3 shadow-md">
+                  <div className="w-9 h-9 rounded-lg bg-[var(--accent-soft)] flex items-center justify-center"><CheckCircle2 className="w-4 h-4 text-[var(--accent)]" /></div>
+                  <div>
+                    <div className="text-xs text-[var(--muted)]">Verified owners</div>
+                    <div className="text-lg font-semibold">100% safe</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -70,7 +74,7 @@ export default function Landing() {
 
       {/* SEARCH */}
       <section className="border-b border-[var(--border)]">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 -mt-8 mb-12">
+        <div className="max-w-5xl mx-auto px-4 md:px-6 py-10">
           <div className="card p-3 md:p-4 shadow-lg" data-testid="search-card">
             <div className="flex flex-col md:flex-row gap-2">
               <div className="flex-1 flex items-center gap-2 px-3">
