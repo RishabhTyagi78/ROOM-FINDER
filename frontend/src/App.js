@@ -1,56 +1,61 @@
-import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
+import { AuthProvider } from "@/context/AuthContext";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-import { HOME } from "@/constants/testIds";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import Landing from "@/pages/Landing";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
+import AuthCallback from "@/pages/AuthCallback";
+import Explore from "@/pages/Explore";
+import MapSearch from "@/pages/MapSearch";
+import PropertyDetail from "@/pages/PropertyDetail";
+import KhattaDashboard from "@/pages/KhattaDashboard";
+import MeethaDashboard from "@/pages/MeethaDashboard";
+import PropertyForm from "@/pages/PropertyForm";
+import Chat from "@/pages/Chat";
+import AdminPanel from "@/pages/AdminPanel";
+import Compare from "@/pages/Compare";
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
+function Router() {
+  const location = useLocation();
+  // Intercept OAuth callback hash
+  if (location.hash?.includes("session_id=")) {
+    return <AuthCallback />;
+  }
   return (
-    <div>
-      <header className="App-header">
-        <a
-          data-testid={HOME.emergentLink}
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/explore" element={<Explore />} />
+      <Route path="/map" element={<MapSearch />} />
+      <Route path="/compare" element={<Compare />} />
+      <Route path="/property/:id" element={<PropertyDetail />} />
+      <Route path="/khatta" element={<KhattaDashboard />} />
+      <Route path="/khatta/add" element={<PropertyForm />} />
+      <Route path="/khatta/edit/:id" element={<PropertyForm />} />
+      <Route path="/meetha" element={<MeethaDashboard />} />
+      <Route path="/chat/:otherId" element={<Chat />} />
+      <Route path="/admin" element={<AdminPanel />} />
+    </Routes>
   );
-};
+}
 
-function App() {
+export default function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <Router />
+          <Toaster position="top-right" toastOptions={{ style: { border: "2px solid #09090B", borderRadius: 0, boxShadow: "4px 4px 0 #09090B", fontWeight: 600 } }} />
+        </AuthProvider>
       </BrowserRouter>
     </div>
   );
 }
-
-export default App;
