@@ -1,54 +1,54 @@
 # KHATTA-MEETHA — Product Requirements Document
 
 ## Original Problem Statement
-Build KHATTA-MEETHA: a modern, full-stack rental platform that directly connects property owners (KHATTA) with students, families, and working professionals (MEETHA). Eliminates brokers, location-based search, dashboards, chat, rent management, document verification, reviews, admin panel.
+Modern, full-stack rental platform connecting property owners (KHATTA) directly with tenants (MEETHA) — broker-free, with location search, dashboards, chat, rent management, document verification, reviews, admin.
 
-## Tech Stack (decided)
-- Frontend: React (CRA + Tailwind + shadcn ui components) — Brutalist design.
+## Tech Stack
+- Frontend: React (CRA) + Tailwind + shadcn — professional minimalist (Inter font, slate/indigo, soft shadows).
 - Backend: FastAPI + Motor (MongoDB).
 - Auth: JWT email/password + Emergent Google OAuth.
-- Maps: Leaflet + OpenStreetMap (no API key).
+- Maps: Leaflet + OpenStreetMap + Nominatim (no API key).
 - Storage: Emergent Object Storage (via EMERGENT_LLM_KEY).
-- Chat: Polling (4s).
+- Chat & Typing: 4 s polling.
 
 ## Personas
-1. KHATTA — Property Owner (lists, manages, talks to tenants).
-2. MEETHA — Tenant (searches, books visits, saves, chats, reviews).
+1. Dual-role user — anyone can list AND rent on the same account (roles=['khatta','meetha']).
+2. Admin — moderates platform.
 3. Guest — browses without auth.
-4. Admin — moderates.
 
-## Done — Feb 2026 (MVP)
-### Backend (all under /api)
-- Auth: register, login, logout, me, forgot-password, reset-password, google/session, set-role.
-- Properties: full CRUD + filters + nearby (haversine).
-- Appointments: create, list, update status.
-- Favorites: add/remove/list.
-- Messages + Conversations (polling).
-- Reviews with aggregate rating + owner reply.
-- Rent records & reminders.
+## Implemented — Feb 2026
+### Backend (`/api`)
+- Auth: register/login/logout/me/forgot-reset/google-oauth, **dual-role** by default.
+- Properties: CRUD + filters + nearby (haversine) + status toggle + view tracking.
+- Appointments: create/list/update; **owner cannot book own property**; auto-notify.
+- Messages: send/list + typing indicator endpoint + read receipts + delivered flag + per-conversation unread count.
+- Favorites & Reviews (with aggregate rating + owner reply).
+- Notifications: `/notifications` (list/unread-count/mark-read/read-all). Auto-created on appointment events, messages, reviews, rent reminders.
 - Documents upload + admin verify.
-- Object storage upload + file serve (`/api/upload`, `/api/files/{path}`).
-- Dashboards: khatta, meetha, admin stats; admin user mgmt.
-- Seeded admin + 2 test users + 6 sample Bangalore properties.
+- Geo: `/geo/reverse` + `/geo/search` (Nominatim proxy).
+- Object storage upload + file serve.
+- Dashboards (khatta, meetha, admin), `properties-viewed`, admin user/property mgmt.
 
 ### Frontend
-- Landing (Brutalist hero, marquee, search, bento features, how-it-works, FAQ, CTA).
-- Login / Register (with role chooser) + Google login + Forgot/Reset.
-- Explore (grid/list/map views + filters + chips).
-- Map search (radius + nearby landmarks via Nominatim).
-- Property detail (gallery, amenities, mini-map, reviews, book a visit, quick chat).
-- Khatta dashboard (stats, properties, appointments, rent).
-- Meetha dashboard (saved, visits, documents w/ upload).
-- Property add/edit form (multi-image upload).
-- Chat (sidebar + conversation + polling).
-- Compare (up to 4 side-by-side).
-- Admin panel (stats, users, doc verify).
+- Landing — clean hero, search bento, featured grid, why-us bento, testimonial, FAQ, dark CTA.
+- Login / Register (single role chooser, default to dual roles internally) + Google + Forgot/Reset.
+- Explore — grid/list/map views + advanced filter panel + skeletons.
+- Map search — Leaflet + radius + landmark presets.
+- Property detail — gallery + amenities + map + reviews + **owner-aware** (owner sees Edit/Manage; tenant sees Visit + Message).
+- Unified Dashboard — role switcher (Tenant ↔ Owner), stats, properties grid, appointments, rent, saved, recently viewed, documents.
+- Property form — searchable + draggable map pin with reverse-geocode autofill, multi-image upload.
+- Chat — sidebar with search & unread badge, multi-line textarea (Shift+Enter), typing indicator, read receipts (check/double-check), online dot.
+- Notifications page + bell with dropdown.
+- Compare (4-way) + Admin panel.
+- **Light + Dark mode** toggle (CSS variables).
+
+## Tested
+- Backend: 30/30 pytest pass.
+- Frontend: All critical flows verified by testing agent (role switcher, notif bell, list-property, chat shift-enter, owner-self-block).
 
 ## Backlog (P1/P2)
-- P1: Replace polling with WebSocket chat; Email verification (currently flag only); Email-driven password reset; Real GPS landmark library; Calendar widget for visit booking; Rate-limit / brute-force on /auth/login.
-- P1: Tighten admin auth flows (document verify ownership check, rent-records ownership check, CORS allowlist).
-- P2: AI property recommendations; Online rent payments (Stripe/Razorpay); Digital rental agreements; Roommate matching; Fraud detection.
-- P2: Split server.py into routers; use httpx.AsyncClient for non-blocking IO.
+- P1: shadcn DatePicker for visit-booking; split server.py into routers; httpx.AsyncClient for non-blocking geo; defense-in-depth message-self-block; notifications pagination/aging; strip 'admin' role from public user shape.
+- P2: WebSocket chat & typing (replace polling); calendar widget; email-driven password reset; online rent payments (Stripe/Razorpay); AI recommendations; broker-free verified badge; digital rental agreements.
 
 ## Test Credentials
 See `/app/memory/test_credentials.md`.

@@ -94,7 +94,7 @@ function OwnerDashboard() {
     { l: "Occupied", v: stats.occupied || 0, c: "bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300", I: User },
     { l: "Pending visits", v: stats.pending_appointments || 0, c: "bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300", I: Calendar },
     { l: "Active chats", v: stats.active_chats || 0, c: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300", I: MessageCircle },
-    { l: "Rent collected", v: `₹${(stats.rent_collected || 0).toLocaleString("en-IN")}`, c: "bg-slate-900 text-white", I: Wallet },
+    { l: "Rent collected", v: `₹${(stats.rent_collected || 0).toLocaleString("en-IN")}`, c: "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300", I: Wallet },
   ];
 
   return (
