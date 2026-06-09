@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
-import { Menu, X, LogOut, Sun, Moon, Building2, Search, MapPin, GitCompare, LayoutDashboard, MessageCircle, ChevronDown, UserCircle } from "lucide-react";
+import { Menu, X, LogOut, Sun, Moon, Building2, Search, MapPin, GitCompare, LayoutDashboard, MessageCircle, ChevronDown, UserCircle, Heart, Bell, Sparkles, Wallet, Bus } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import NotificationBell from "./NotificationBell";
 
@@ -36,6 +36,7 @@ export default function Navbar() {
           <Link to="/explore" className={`px-3 py-2 rounded-lg text-sm transition ${active("/explore")}`} data-testid="nav-explore">Explore</Link>
           <Link to="/map" className={`px-3 py-2 rounded-lg text-sm transition ${active("/map")}`} data-testid="nav-map">Map</Link>
           <Link to="/compare" className={`px-3 py-2 rounded-lg text-sm transition ${active("/compare")}`} data-testid="nav-compare">Compare</Link>
+          <Link to="/tools/cost" className={`px-3 py-2 rounded-lg text-sm transition ${active("/tools/cost")}`} data-testid="nav-tools">Tools</Link>
           {user && <Link to="/dashboard" className={`px-3 py-2 rounded-lg text-sm transition ${active("/dashboard")}`} data-testid="nav-dashboard">Dashboard</Link>}
         </nav>
 
@@ -71,7 +72,12 @@ export default function Navbar() {
                     </div>
                     <div className="p-1.5">
                       <Link to="/dashboard" onClick={() => setMenu(false)} className="flex items-center gap-2 px-2.5 py-2 rounded-md hover:bg-[var(--bg-2)] text-sm"><LayoutDashboard className="w-4 h-4" /> Dashboard</Link>
-                      <Link to="/notifications" onClick={() => setMenu(false)} className="flex items-center gap-2 px-2.5 py-2 rounded-md hover:bg-[var(--bg-2)] text-sm"><UserCircle className="w-4 h-4" /> Notifications</Link>
+                      <Link to="/saved" onClick={() => setMenu(false)} className="flex items-center gap-2 px-2.5 py-2 rounded-md hover:bg-[var(--bg-2)] text-sm"><Heart className="w-4 h-4" /> Saved</Link>
+                      <Link to="/chat" onClick={() => setMenu(false)} className="flex items-center gap-2 px-2.5 py-2 rounded-md hover:bg-[var(--bg-2)] text-sm"><MessageCircle className="w-4 h-4" /> Chats</Link>
+                      <Link to="/notifications" onClick={() => setMenu(false)} className="flex items-center gap-2 px-2.5 py-2 rounded-md hover:bg-[var(--bg-2)] text-sm"><Bell className="w-4 h-4" /> Notifications</Link>
+                      <Link to="/preferences" onClick={() => setMenu(false)} className="flex items-center gap-2 px-2.5 py-2 rounded-md hover:bg-[var(--bg-2)] text-sm"><Sparkles className="w-4 h-4" /> My preferences</Link>
+                      <Link to="/tools/cost" onClick={() => setMenu(false)} className="flex items-center gap-2 px-2.5 py-2 rounded-md hover:bg-[var(--bg-2)] text-sm"><Wallet className="w-4 h-4" /> Cost calculator</Link>
+                      <Link to="/tools/commute" onClick={() => setMenu(false)} className="flex items-center gap-2 px-2.5 py-2 rounded-md hover:bg-[var(--bg-2)] text-sm"><Bus className="w-4 h-4" /> Commute calculator</Link>
                       <button onClick={() => { setMenu(false); logout(); nav("/"); }} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md hover:bg-[var(--bg-2)] text-sm text-red-600" data-testid="nav-logout">
                         <LogOut className="w-4 h-4" /> Sign out
                       </button>

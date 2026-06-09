@@ -122,6 +122,10 @@ export default function PropertyForm() {
                   <input className="field mt-1.5" value={form.city} onChange={(e) => set("city", e.target.value)} required data-testid="pf-city" />
                 </div>
                 <div>
+                  <label className="label">Locality / Area</label>
+                  <input className="field mt-1.5" value={form.locality || ""} onChange={(e) => set("locality", e.target.value)} placeholder="e.g. Indiranagar" data-testid="pf-locality" />
+                </div>
+                <div>
                   <label className="label">BHK</label>
                   <input className="field mt-1.5" value={form.bhk} onChange={(e) => set("bhk", e.target.value)} data-testid="pf-bhk" />
                 </div>
@@ -143,6 +147,16 @@ export default function PropertyForm() {
                 <select className="field mt-1.5" value={form.gender_preference} onChange={(e) => set("gender_preference", e.target.value)} data-testid="pf-gender">
                   <option>Any</option><option>Male</option><option>Female</option>
                 </select>
+              </div>
+              <div>
+                <label className="label">Lifestyle tags (helps tenants find your property)</label>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {["Student Friendly", "Family Friendly", "Working Professional", "Pet Friendly", "Female Friendly", "Male Friendly", "Co-Living"].map((t) => (
+                    <button key={t} type="button" onClick={() => set("lifestyle_tags", (form.lifestyle_tags || []).includes(t) ? (form.lifestyle_tags || []).filter((x) => x !== t) : [...(form.lifestyle_tags || []), t])}
+                      className={`px-3 py-1 rounded-full text-xs border ${(form.lifestyle_tags || []).includes(t) ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]" : "border-[var(--border)] text-[var(--muted)]"}`}
+                      data-testid={`pf-tag-${t}`}>{t}</button>
+                  ))}
+                </div>
               </div>
             </div>
 

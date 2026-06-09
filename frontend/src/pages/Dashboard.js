@@ -4,8 +4,9 @@ import { useAuth } from "@/context/AuthContext";
 import api, { formatError } from "@/lib/api";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
-import { Building2, Home, Calendar, Wallet, MessageCircle, Heart, FileText, Bell, Plus, BarChart3, User, Eye, Edit, Trash2, ArrowRightLeft, CheckCircle2, XCircle, Clock, ChevronRight } from "lucide-react";
+import { Building2, Home, Calendar, Wallet, MessageCircle, Heart, FileText, Bell, Plus, BarChart3, User, Eye, Edit, Trash2, ArrowRightLeft, CheckCircle2, XCircle, Clock, ChevronRight, TrendingUp } from "lucide-react";
 import PropertyCard from "@/components/PropertyCard";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export default function Dashboard() {
   const { user, loading, setActiveRole } = useAuth();
@@ -61,17 +62,20 @@ function OwnerDashboard() {
   const [stats, setStats] = useState({});
   const [props, setProps] = useState([]);
   const [appts, setAppts] = useState([]);
+  const [revenue, setRevenue] = useState({ series: [], total: 0 });
   const [section, setSection] = useState("overview");
 
   const load = async () => {
     try {
-      const [s, p, a] = await Promise.all([
+      const [s, p, a, r] = await Promise.all([
         api.get("/dashboard/khatta"),
         api.get("/properties", { params: { owner_id: user.id } }),
         api.get("/appointments"),
+        api.get("/dashboard/khatta/revenue"),
       ]);
       setStats(s.data); setProps(p.data);
       setAppts(a.data.filter((x) => x.owner_id === user.id));
+      setRevenue(r.data);
     } catch (e) { toast.error(formatError(e)); }
   };
   useEffect(() => { load(); }, []); // eslint-disable-line
@@ -111,7 +115,7 @@ function OwnerDashboard() {
 
       <div className="mt-8 flex items-center justify-between flex-wrap gap-3">
         <div className="flex gap-1 p-1 bg-[var(--card)] border border-[var(--border)] rounded-lg" data-testid="owner-sections">
-          {[["overview", "Properties", Building2], ["appointments", "Visits", Calendar], ["rent", "Rent", Wallet]].map(([k, l, I]) => (
+          {[["overview", "Properties", Building2], ["appointments", "Visits", Calendar], ["rent", "Revenue", Wallet]].map(([k, l, I]) => (
             <button key={k} onClick={() => setSection(k)}
               className={`px-3 py-1.5 text-sm rounded-md flex items-center gap-1.5 transition ${section === k ? "bg-[var(--ink)] text-white" : "text-[var(--muted)] hover:text-[var(--ink)]"}`}
               data-testid={`tab-${k}`}>
@@ -183,10 +187,34 @@ function OwnerDashboard() {
         )}
 
         {section === "rent" && (
-          <div className="card p-12 text-center text-[var(--muted)]">
-            <Wallet className="w-10 h-10 mx-auto mb-3" />
-            <div>Rent management — track payments, send reminders.</div>
-            <p className="text-xs mt-1">Coming soon — payment integration in progress.</p>
+          <div className="grid lg:grid-cols-3 gap-5">
+            <div className="card p-5 lg:col-span-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4" /> Revenue (last 6 months)</h3>
+                <div className="text-xs text-[var(--muted)]">Total: <b className="text-[var(--ink)]">₹{revenue.total.toLocaleString("en-IN")}</b></div>
+              </div>
+              <div style={{ width: "100%", height: 260 }} className="mt-4">
+                <ResponsiveContainer>
+                  <LineChart data={revenue.series} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey="month" stroke="var(--muted)" fontSize={11} />
+                    <YAxis stroke="var(--muted)" fontSize={11} tickFormatter={(v) => `₹${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
+                    <Tooltip formatter={(v) => `₹${Number(v).toLocaleString("en-IN")}`} contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8 }} />
+                    <Line type="monotone" dataKey="revenue" stroke="var(--accent)" strokeWidth={2.5} dot={{ fill: "var(--accent)", r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="card p-5">
+              <h3 className="font-semibold">Outstanding</h3>
+              <div className="mt-3 space-y-2">
+                <div className="flex items-center justify-between"><span className="text-sm text-[var(--muted)]">Total collected</span><span className="font-semibold">₹{(stats.rent_collected || 0).toLocaleString("en-IN")}</span></div>
+                <div className="flex items-center justify-between"><span className="text-sm text-[var(--muted)]">Active tenants</span><span className="font-semibold">{stats.occupied || 0}</span></div>
+                <div className="flex items-center justify-between"><span className="text-sm text-[var(--muted)]">Available units</span><span className="font-semibold">{stats.available || 0}</span></div>
+                <div className="flex items-center justify-between border-t border-[var(--border)] pt-2 mt-2"><span className="text-sm font-medium">Occupancy rate</span><span className="font-semibold text-green-600">{stats.total_properties ? Math.round((stats.occupied / stats.total_properties) * 100) : 0}%</span></div>
+              </div>
+              <p className="text-xs text-[var(--muted)] mt-4 leading-relaxed">Connect a payment gateway to start collecting rent online and track outstanding dues automatically.</p>
+            </div>
           </div>
         )}
       </div>

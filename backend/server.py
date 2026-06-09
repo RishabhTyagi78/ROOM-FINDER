@@ -333,7 +333,158 @@ async def search_geo(q: str):
         return r.json()
     except: return []
 
-# ---- PROPERTIES ----
+# ---- SEARCH / DISCOVERY ----
+INDIAN_CITIES = [
+    "Bangalore", "Mumbai", "Delhi", "Pune", "Hyderabad", "Chennai", "Kolkata",
+    "Gurgaon", "Noida", "Ahmedabad", "Jaipur", "Lucknow", "Chandigarh", "Indore",
+    "Bhopal", "Surat", "Nagpur", "Coimbatore", "Kochi", "Thiruvananthapuram",
+    "Mysore", "Mangalore", "Vizag", "Bhubaneswar", "Patna", "Ranchi", "Goa",
+]
+
+@api_router.get("/cities")
+async def cities(q: Optional[str] = None):
+    """Return distinct cities + property counts."""
+    pipeline = [{"$group": {"_id": "$city", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}]
+    out = []
+    async for c in db.properties.aggregate(pipeline):
+        if c["_id"]:
+            out.append({"city": c["_id"], "count": c["count"]})
+    # Merge with known Indian cities for autocomplete
+    known = {row["city"].lower(): row for row in out}
+    for c in INDIAN_CITIES:
+        if c.lower() not in known:
+            out.append({"city": c, "count": 0})
+    if q:
+        q_lower = q.lower()
+        out = [c for c in out if q_lower in c["city"].lower()]
+    return out[:20]
+
+@api_router.get("/localities")
+async def localities(city: str, q: Optional[str] = None):
+    """Distinct localities within a city + counts."""
+    pipeline = [
+        {"$match": {"city": {"$regex": f"^{city}$", "$options": "i"}}},
+        {"$group": {"_id": "$locality", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+    ]
+    out = []
+    async for c in db.properties.aggregate(pipeline):
+        if c["_id"]:
+            out.append({"locality": c["_id"], "count": c["count"]})
+    if q:
+        q_lower = q.lower()
+        out = [c for c in out if q_lower in c["locality"].lower()]
+    return out
+
+# Simple autocorrect for common city typos
+TYPO_MAP = {
+    "banglore": "Bangalore", "bengalore": "Bangalore", "bangaluru": "Bangalore",
+    "gurgoan": "Gurgaon", "gurguam": "Gurgaon", "gurugram": "Gurgaon",
+    "delhii": "Delhi", "mumabi": "Mumbai", "mumbay": "Mumbai",
+    "pune ": "Pune", "punee": "Pune", "hydrabad": "Hyderabad", "hydrabad": "Hyderabad",
+    "noidaa": "Noida", "kolkatta": "Kolkata", "calcutta": "Kolkata",
+    "madras": "Chennai", "chenai": "Chennai", "channai": "Chennai",
+}
+
+@api_router.get("/search/suggest")
+async def search_suggest(q: str):
+    """Smart suggestions: cities + localities + corrections."""
+    q_lower = q.lower().strip()
+    suggestions = []
+    correction = TYPO_MAP.get(q_lower)
+    if correction:
+        suggestions.append({"type": "correction", "value": correction, "label": f'Did you mean "{correction}"?'})
+    # Cities
+    for c in INDIAN_CITIES:
+        if q_lower in c.lower():
+            suggestions.append({"type": "city", "value": c, "label": c})
+    # Localities (from DB)
+    if len(q_lower) >= 2:
+        async for d in db.properties.aggregate([
+            {"$match": {"$or": [{"locality": {"$regex": q, "$options": "i"}}, {"address": {"$regex": q, "$options": "i"}}]}},
+            {"$group": {"_id": {"locality": "$locality", "city": "$city"}, "count": {"$sum": 1}}},
+            {"$limit": 8},
+        ]):
+            loc = d["_id"].get("locality")
+            ct = d["_id"].get("city")
+            if loc:
+                suggestions.append({"type": "locality", "value": loc, "label": f"{loc}, {ct}", "city": ct, "count": d["count"]})
+    return suggestions[:12]
+
+# ---- LOCALITY INTELLIGENCE (basic, derived from data) ----
+@api_router.get("/locality/intel")
+async def locality_intel(city: str, locality: str):
+    """Derive scores from property data — placeholder; would use real APIs."""
+    props = await db.properties.find({"city": {"$regex": f"^{city}$", "$options": "i"},
+                                      "locality": {"$regex": locality, "$options": "i"}}, {"_id": 0}).to_list(100)
+    if not props:
+        return {"city": city, "locality": locality, "scores": None, "message": "No data yet"}
+    avg_rent = sum(p["rent"] for p in props) / len(props)
+    has_pg = sum(1 for p in props if p["property_type"] in ("PG", "Shared Room"))
+    has_family = sum(1 for p in props if p.get("bhk", "").startswith(("2", "3", "4")))
+    student_score = min(100, int((has_pg / len(props)) * 100 + 30))
+    family_score = min(100, int((has_family / len(props)) * 100 + 20))
+    return {
+        "city": city, "locality": locality,
+        "total_properties": len(props),
+        "avg_rent": round(avg_rent),
+        "scores": {
+            "safety": 78, "connectivity": 82, "internet": 88,
+            "student_friendly": student_score, "family_friendly": family_score,
+            "public_transport": 75, "overall": 80,
+        },
+        "pros": ["Good connectivity", "Affordable rent options", "Multiple property types"],
+        "cons": ["Traffic during peak hours", "Limited parking"],
+    }
+
+# ---- DELETE / CLEAR ----
+@api_router.delete("/messages/{mid}")
+async def delete_message(mid: str, user=Depends(get_current_user)):
+    msg = await db.messages.find_one({"id": mid})
+    if not msg: raise HTTPException(status_code=404, detail="Not found")
+    if msg["from_user_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    await db.messages.update_one({"id": mid}, {"$set": {"text": "[message deleted]", "deleted": True}})
+    return {"ok": True}
+
+@api_router.delete("/messages/conversation/{conv_id}")
+async def clear_conv(conv_id: str, user=Depends(get_current_user)):
+    if user["id"] not in conv_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    await db.messages.delete_many({"conv_id": conv_id})
+    return {"ok": True}
+
+@api_router.delete("/notifications/{nid}")
+async def delete_notif(nid: str, user=Depends(get_current_user)):
+    await db.notifications.delete_one({"id": nid, "user_id": user["id"]})
+    return {"ok": True}
+
+@api_router.delete("/notifications")
+async def clear_notifs(user=Depends(get_current_user)):
+    await db.notifications.delete_many({"user_id": user["id"]})
+    return {"ok": True}
+
+# ---- REVENUE CHART ----
+@api_router.get("/dashboard/khatta/revenue")
+async def revenue_chart(user=Depends(get_current_user)):
+    """Monthly revenue data for owner dashboard chart."""
+    records = await db.rent_records.find({"owner_id": user["id"], "status": "paid"}, {"_id": 0}).to_list(1000)
+    by_month = {}
+    for r in records:
+        created = r.get("created_at", "")[:7]  # YYYY-MM
+        by_month[created] = by_month.get(created, 0) + r["amount"]
+    # Last 6 months
+    from datetime import date
+    today = date.today()
+    months = []
+    for i in range(5, -1, -1):
+        y = today.year if today.month - i > 0 else today.year - 1
+        m = ((today.month - i - 1) % 12) + 1
+        key = f"{y:04d}-{m:02d}"
+        months.append({"month": key, "revenue": by_month.get(key, 0)})
+    return {"series": months, "total": sum(r["amount"] for r in records)}
+
+
 def haversine_km(lat1, lon1, lat2, lon2):
     from math import radians, sin, cos, asin, sqrt
     R = 6371.0
@@ -344,22 +495,29 @@ def haversine_km(lat1, lon1, lat2, lon2):
 @api_router.get("/properties")
 async def list_properties(
     q: Optional[str] = None, city: Optional[str] = None,
+    locality: Optional[str] = None,
     property_type: Optional[str] = None, min_rent: Optional[float] = None,
     max_rent: Optional[float] = None, furnished: Optional[str] = None,
     ac: Optional[bool] = None, wifi: Optional[bool] = None,
     parking: Optional[bool] = None, pet_friendly: Optional[bool] = None,
     gender_preference: Optional[str] = None, status: Optional[str] = None,
+    lifestyle_tag: Optional[str] = None,
     lat: Optional[float] = None, lng: Optional[float] = None,
     radius_km: Optional[float] = None, owner_id: Optional[str] = None,
     limit: int = 60,
 ):
     query = {}
     if status: query["status"] = status
-    if city: query["city"] = {"$regex": city, "$options": "i"}
+    if city: query["city"] = {"$regex": f"^{city}$", "$options": "i"}
+    if locality:
+        loc_list = locality.split(",")
+        query["$or"] = [{"locality": {"$regex": l.strip(), "$options": "i"}} for l in loc_list if l.strip()]
+        if not query["$or"]: query.pop("$or")
     if property_type: query["property_type"] = property_type
     if furnished: query["furnished"] = furnished
     if owner_id: query["owner_id"] = owner_id
     if gender_preference: query["gender_preference"] = gender_preference
+    if lifestyle_tag: query["lifestyle_tags"] = lifestyle_tag
     if ac is not None: query["ac"] = ac
     if wifi is not None: query["wifi"] = wifi
     if parking is not None: query["parking"] = parking
@@ -369,12 +527,19 @@ async def list_properties(
     if max_rent is not None: rent_q["$lte"] = max_rent
     if rent_q: query["rent"] = rent_q
     if q:
-        query["$or"] = [
+        text_or = [
             {"title": {"$regex": q, "$options": "i"}},
             {"description": {"$regex": q, "$options": "i"}},
             {"address": {"$regex": q, "$options": "i"}},
+            {"locality": {"$regex": q, "$options": "i"}},
+            {"city": {"$regex": q, "$options": "i"}},
         ]
-    docs = await db.properties.find(query, {"_id": 0}).sort("created_at", -1).to_list(limit*2)
+        if "$or" in query:
+            query = {"$and": [{"$or": query.pop("$or")}, {"$or": text_or}], **query}
+        else:
+            query["$or"] = text_or
+    # Sort: available first, then by created
+    docs = await db.properties.find(query, {"_id": 0}).sort([("status", 1), ("created_at", -1)]).to_list(limit*2)
     if lat is not None and lng is not None and radius_km:
         docs = [d for d in docs if haversine_km(lat, lng, d["latitude"], d["longitude"]) <= radius_km]
     if lat is not None and lng is not None:

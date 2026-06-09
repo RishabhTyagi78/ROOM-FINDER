@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import api, { formatError } from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { Send, Check, CheckCheck, ArrowLeft, Search, MessageCircle } from "lucide-react";
+import { Send, Check, CheckCheck, ArrowLeft, Search, MessageCircle, Paperclip, MoreVertical, Trash2 } from "lucide-react";
 
 export default function Chat() {
   const { otherId } = useParams();
@@ -85,6 +85,29 @@ export default function Chat() {
       toast.error(formatError(e));
       setMessages((m) => m.filter((x) => x.id !== optimistic.id));
     }
+  };
+
+  const deleteMessage = async (id) => {
+    if (!window.confirm("Delete this message?")) return;
+    try { await api.delete(`/messages/${id}`); loadMessages(); }
+    catch (e) { toast.error(formatError(e)); }
+  };
+
+  const clearConversation = async () => {
+    if (!window.confirm("Clear this entire conversation?")) return;
+    try { await api.delete(`/messages/conversation/${convId}`); setMessages([]); loadConvs(); toast.success("Cleared"); }
+    catch (e) { toast.error(formatError(e)); }
+  };
+
+  const uploadAttach = async (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    try {
+      const fd = new FormData(); fd.append("file", file);
+      const { data } = await api.post("/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      const fullUrl = `${process.env.REACT_APP_BACKEND_URL}${data.url}`;
+      await api.post("/messages", { to_user_id: otherId, property_id: propertyId, text: `[Attachment] ${fullUrl}` });
+      loadMessages();
+    } catch (err) { toast.error(formatError(err)); }
   };
 
   const onKeyDown = (e) => {
@@ -187,9 +210,16 @@ export default function Chat() {
                       {showDate && (
                         <div className="text-center my-3"><span className="badge badge-mute">{new Date(m.created_at).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</span></div>
                       )}
-                      <div className={`flex ${mine ? "justify-end" : "justify-start"}`} data-testid={`msg-${m.id}`}>
-                        <div className={`max-w-[80%] sm:max-w-[70%] px-3 py-2 rounded-2xl whitespace-pre-wrap break-words text-sm ${mine ? "bg-[var(--accent)] text-white rounded-br-md" : "bg-[var(--card)] border border-[var(--border)] rounded-bl-md"} ${m._pending ? "opacity-70" : ""}`}>
-                          {m.text}
+                      <div className={`flex group ${mine ? "justify-end" : "justify-start"}`} data-testid={`msg-${m.id}`}>
+                        {mine && !m._pending && !m.deleted && (
+                          <button onClick={() => deleteMessage(m.id)} className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition mr-1 self-center text-red-500" title="Delete" data-testid={`del-msg-${m.id}`}>
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                        <div className={`max-w-[80%] sm:max-w-[70%] px-3 py-2 rounded-2xl whitespace-pre-wrap break-words text-sm ${mine ? "bg-[var(--accent)] text-white rounded-br-md" : "bg-[var(--card)] border border-[var(--border)] rounded-bl-md"} ${m._pending ? "opacity-70" : ""} ${m.deleted ? "italic opacity-60" : ""}`}>
+                          {m.text.startsWith("[Attachment] ") ? (
+                            <a href={m.text.slice(13)} target="_blank" rel="noreferrer" className={`underline ${mine ? "text-white" : ""}`}>📎 Attachment</a>
+                          ) : m.text}
                           <div className={`flex items-center gap-1 mt-1 text-[10px] ${mine ? "text-white/70 justify-end" : "text-[var(--muted)]"}`}>
                             {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                             {mine && !m._pending && (m.read ? <CheckCheck className="w-3 h-3" /> : <Check className="w-3 h-3" />)}
@@ -213,6 +243,10 @@ export default function Chat() {
               </div>
 
               <div className="border-t border-[var(--border)] p-3 flex gap-2 items-end bg-[var(--card)]">
+                <label className="btn btn-ghost !p-2.5 flex-shrink-0 cursor-pointer" title="Attach file" data-testid="chat-attach">
+                  <Paperclip className="w-4 h-4" />
+                  <input type="file" hidden onChange={uploadAttach} accept="image/*,.pdf" />
+                </label>
                 <textarea ref={textareaRef} className="field resize-none !py-2 flex-1" rows={1} value={text}
                   onChange={onChange} onKeyDown={onKeyDown}
                   placeholder="Type a message…   (Shift+Enter for new line)"

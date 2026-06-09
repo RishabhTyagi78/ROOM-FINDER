@@ -19,6 +19,10 @@ import Chat from "@/pages/Chat";
 import AdminPanel from "@/pages/AdminPanel";
 import Compare from "@/pages/Compare";
 import Notifications from "@/pages/Notifications";
+import CostCalculator from "@/pages/CostCalculator";
+import CommuteCalculator from "@/pages/CommuteCalculator";
+import Saved from "@/pages/Saved";
+import Preferences from "@/pages/Preferences";
 
 function Router() {
   const location = useLocation();
@@ -40,6 +44,10 @@ function Router() {
       <Route path="/chat" element={<Chat />} />
       <Route path="/chat/:otherId" element={<Chat />} />
       <Route path="/notifications" element={<Notifications />} />
+      <Route path="/tools/cost" element={<CostCalculator />} />
+      <Route path="/tools/commute" element={<CommuteCalculator />} />
+      <Route path="/saved" element={<Saved />} />
+      <Route path="/preferences" element={<Preferences />} />
       <Route path="/admin" element={<AdminPanel />} />
     </Routes>
   );

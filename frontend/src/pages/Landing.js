@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, MapPin, Search, Shield, MessageCircle, Star, Sparkles, CheckCircle2, Building2, Users, TrendingUp, BadgeCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
@@ -74,18 +75,9 @@ export default function Landing() {
 
       {/* SEARCH */}
       <section className="border-b border-[var(--border)]">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 py-10">
-          <div className="card p-3 md:p-4 shadow-lg" data-testid="search-card">
-            <div className="flex flex-col md:flex-row gap-2">
-              <div className="flex-1 flex items-center gap-2 px-3">
-                <Search className="w-4 h-4 text-[var(--muted)]" />
-                <input className="flex-1 outline-none bg-transparent text-sm py-2.5"
-                  placeholder="Search by city, locality, or college…" data-testid="search-input"
-                  onKeyDown={(e) => { if (e.key === "Enter") nav(`/explore?q=${encodeURIComponent(e.target.value)}`); }} />
-              </div>
-              <Link to="/explore" className="btn btn-primary" data-testid="search-button">Search</Link>
-              <Link to="/map" className="btn btn-outline" data-testid="search-map-button"><MapPin className="w-4 h-4" /> Map</Link>
-            </div>
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-10">
+          <div className="card p-2 shadow-lg" data-testid="search-card">
+            <SmartSearch size="lg" />
           </div>
           <div className="mt-3 flex flex-wrap gap-2 text-xs px-1">
             <span className="text-[var(--muted)]">Popular:</span>

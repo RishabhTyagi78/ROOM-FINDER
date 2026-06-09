@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { formatError } from "@/lib/api";
 import { Building2 } from "lucide-react";
+import PasswordStrength, { isPasswordStrong } from "@/components/PasswordStrength";
 
 export default function Register() {
   const { register } = useAuth();
@@ -11,8 +12,16 @@ export default function Register() {
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "", role: "meetha" });
   const [busy, setBusy] = useState(false);
 
+  const onPhone = (e) => {
+    // numeric only
+    const v = e.target.value.replace(/\D/g, "").slice(0, 10);
+    setForm({ ...form, phone: v });
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
+    if (!isPasswordStrong(form.password)) { toast.error("Password doesn't meet all requirements"); return; }
+    if (form.phone && form.phone.length !== 10) { toast.error("Phone number must be 10 digits"); return; }
     setBusy(true);
     try {
       await register(form);
@@ -60,13 +69,14 @@ export default function Register() {
                 <input className="field mt-1.5" value={form.email} type="email" onChange={(e) => setForm({ ...form, email: e.target.value })} required data-testid="register-email" />
               </div>
               <div>
-                <label className="label">Phone</label>
-                <input className="field mt-1.5" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} data-testid="register-phone" />
+                <label className="label">Phone (10 digits)</label>
+                <input className="field mt-1.5" value={form.phone} onChange={onPhone} inputMode="numeric" pattern="\d{10}" placeholder="9876543210" data-testid="register-phone" />
               </div>
             </div>
             <div>
               <label className="label">Password</label>
-              <input className="field mt-1.5" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={6} data-testid="register-password" />
+              <input className="field mt-1.5" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required data-testid="register-password" />
+              <PasswordStrength value={form.password} />
             </div>
             <button disabled={busy} className="btn btn-primary w-full" data-testid="register-submit">{busy ? "Creating…" : "Create account"}</button>
           </form>

@@ -5,8 +5,11 @@ import PropertyCard from "@/components/PropertyCard";
 import api, { formatError } from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { Filter, LayoutGrid, List as ListIcon, Map as MapIcon, SlidersHorizontal, X } from "lucide-react";
+import { Filter, LayoutGrid, List as ListIcon, Map as MapIcon, SlidersHorizontal, X, Sparkles } from "lucide-react";
 import PropertyMap from "@/components/PropertyMap";
+import SmartSearch from "@/components/SmartSearch";
+
+const LIFESTYLE_TAGS = ["Student Friendly", "Family Friendly", "Working Professional", "Pet Friendly", "Female Friendly", "Co-Living"];
 
 export default function Explore() {
   const [searchParams] = useSearchParams();
@@ -19,10 +22,18 @@ export default function Explore() {
   const [filters, setFilters] = useState({
     q: searchParams.get("q") || "",
     city: searchParams.get("city") || "",
+    locality: searchParams.get("locality") || "",
     property_type: "", min_rent: "", max_rent: "",
     furnished: "", ac: false, wifi: false, parking: false, pet_friendly: false,
-    gender_preference: "",
+    gender_preference: "", lifestyle_tag: "",
   });
+  const [localities, setLocalities] = useState([]);
+
+  const loadLocalities = async () => {
+    if (!filters.city) { setLocalities([]); return; }
+    try { const { data } = await api.get("/localities", { params: { city: filters.city } }); setLocalities(data); } catch {}
+  };
+  useEffect(() => { loadLocalities(); }, [filters.city]); // eslint-disable-line
 
   const load = async () => {
     setLoading(true);
@@ -78,15 +89,44 @@ export default function Explore() {
         </div>
 
         {/* Quick search bar */}
-        <div className="card p-3 mt-4 flex flex-wrap items-center gap-2">
-          <input className="field flex-1 min-w-[180px]" placeholder="Search title, area…" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} data-testid="filter-q" />
-          <input className="field w-32" placeholder="City" value={filters.city} onChange={(e) => setFilters({ ...filters, city: e.target.value })} data-testid="filter-city" />
+        <div className="card p-2 mt-4">
+          <SmartSearch />
+        </div>
+        <div className="card p-3 mt-3 flex flex-wrap items-center gap-2">
+          <input className="field w-32" placeholder="City" value={filters.city} onChange={(e) => setFilters({ ...filters, city: e.target.value, locality: "" })} data-testid="filter-city" />
           <select className="field w-32" value={filters.property_type} onChange={(e) => setFilters({ ...filters, property_type: e.target.value })} data-testid="filter-type">
             <option value="">Any type</option>{["PG", "Single Room", "Shared Room", "Flat", "Apartment", "Independent House"].map((t) => <option key={t}>{t}</option>)}
           </select>
           <input className="field w-24" type="number" placeholder="Min ₹" value={filters.min_rent} onChange={(e) => setFilters({ ...filters, min_rent: e.target.value })} data-testid="filter-min" />
           <input className="field w-24" type="number" placeholder="Max ₹" value={filters.max_rent} onChange={(e) => setFilters({ ...filters, max_rent: e.target.value })} data-testid="filter-max" />
-          <button onClick={load} className="btn btn-primary" data-testid="filter-apply"><Filter className="w-4 h-4" /> Search</button>
+          <button onClick={load} className="btn btn-primary" data-testid="filter-apply"><Filter className="w-4 h-4" /> Apply</button>
+        </div>
+
+        {/* Locality chips */}
+        {localities.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+            <span className="text-xs text-[var(--muted)]">Localities:</span>
+            {localities.map((l) => (
+              <button key={l.locality} onClick={() => setFilters({ ...filters, locality: filters.locality === l.locality ? "" : l.locality })}
+                className={`text-xs px-2.5 py-1 rounded-full border transition ${filters.locality === l.locality ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]" : "border-[var(--border)] text-[var(--muted)] hover:bg-[var(--bg-3)]"}`}
+                data-testid={`locality-${l.locality}`}>
+                {l.locality} <span className="opacity-60">({l.count})</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Lifestyle tag chips */}
+        <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <span className="text-xs text-[var(--muted)]">Lifestyle:</span>
+          {LIFESTYLE_TAGS.map((t) => (
+            <button key={t} onClick={() => setFilters({ ...filters, lifestyle_tag: filters.lifestyle_tag === t ? "" : t })}
+              className={`text-xs px-2.5 py-1 rounded-full border transition ${filters.lifestyle_tag === t ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]" : "border-[var(--border)] text-[var(--muted)]"}`}
+              data-testid={`lifestyle-${t}`}>
+              {t}
+            </button>
+          ))}
         </div>
 
         {showFilters && (

@@ -14,7 +14,14 @@ export default function NotificationBell() {
 
   const loadCount = async () => {
     if (!user) return;
-    try { const { data } = await api.get("/notifications/unread-count"); setCount(data.count); } catch {}
+    try {
+      const { data } = await api.get("/notifications/unread-count");
+      // play sound if increased
+      if (data.count > count && count > 0 && localStorage.getItem("km_notif_muted") !== "1") {
+        try { new Audio("data:audio/wav;base64,UklGRl4DAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YToAAAB/f39/f4CAgIB/f39/f4CAgIB/f39/").play().catch(()=>{}); } catch {}
+      }
+      setCount(data.count);
+    } catch {}
   };
   const loadList = async () => {
     try { const { data } = await api.get("/notifications", { params: { limit: 10 } }); setNotifs(data); } catch {}
